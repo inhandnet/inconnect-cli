@@ -1,9 +1,13 @@
 package user
 
 import (
+	"fmt"
 	"net/url"
 	"strconv"
 
+	"github.com/tidwall/gjson"
+
+	"github.com/inhandnet/ics-cli/internal/api"
 	"github.com/inhandnet/ics-cli/internal/cmdutil"
 	"github.com/inhandnet/ics-cli/internal/factory"
 	"github.com/inhandnet/ics-cli/internal/iostreams"
@@ -74,6 +78,18 @@ Note: --role-id is required by the server. Look up role IDs via 'ics role list'.
 
 			respBody, err := client.Do("POST", "/api/invpn/user", q, body)
 			if err != nil {
+				// error_code 10001 (internal_error) is frequently returned AFTER the
+				// user record was already persisted — a downstream step (typically
+				// certificate issuance) failed. Re-query by email to find out whether
+				// the user actually exists, so we don't report a misleading failure.
+				if api.ErrorCode(err) == "10001" {
+					if created := findUserByEmail(client, q.Get("oid"), opts.Email); created != nil {
+						cmdutil.WriteCreated(f, "User", created)
+						fmt.Fprintf(f.IO.ErrOut, "%s User was created, but a post-creation step failed (likely certificate issuance). "+
+							"Run 'ics user issue-keypair <id>' to retry issuing its key pair.\n", iostreams.Yellow("!"))
+						return iostreams.FormatOutput(created, f.IO, f.IO.Output)
+					}
+				}
 				_ = iostreams.FormatOutput(respBody, f.IO, f.IO.Output)
 				return err
 			}
@@ -97,4 +113,26 @@ Note: --role-id is required by the server. Look up role IDs via 'ics role list'.
 	_ = cmd.MarkFlagRequired("role-id")
 
 	return cmd
+}
+
+// findUserByEmail looks up a user by exact email within an org and returns the
+// matching list element as raw JSON, or nil if none matches. Used to confirm a
+// create that the backend reported as 10001 actually persisted.
+func findUserByEmail(client *api.APIClient, oid, email string) []byte {
+	q := url.Values{}
+	if oid != "" {
+		q.Set("oid", oid)
+	}
+	q.Set("email", email)
+
+	body, err := client.Get("/api/invpn/users", q)
+	if err != nil {
+		return nil
+	}
+	for _, u := range gjson.GetBytes(body, "result").Array() {
+		if u.Get("email").String() == email {
+			return []byte(u.Raw)
+		}
+	}
+	return nil
 }

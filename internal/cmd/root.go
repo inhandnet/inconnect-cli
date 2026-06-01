@@ -42,11 +42,24 @@ func NewCmdRoot(f *factory.Factory) *cobra.Command {
 			}
 			f.IO.Output = output
 
-			if oid, _ := cmd.Flags().GetString("oid"); oid != "" {
-				os.Setenv("ICS_OID", oid)
-			}
 			if ctx, _ := cmd.Flags().GetString("context"); ctx != "" {
 				os.Setenv("ICS_CONTEXT", ctx)
+			}
+
+			// Resolve the effective org ID: an explicit --oid wins; otherwise fall
+			// back to the active context's saved OrgID (set via 'auth switch-org').
+			// We backfill both the flag and ICS_OID so every read path sees it.
+			oid, _ := cmd.Flags().GetString("oid")
+			if oid == "" {
+				if cfg, err := f.Config(); err == nil {
+					if actx, err := cfg.ActiveContext(); err == nil && actx.OrgID != "" {
+						oid = actx.OrgID
+						_ = cmd.Flags().Set("oid", oid)
+					}
+				}
+			}
+			if oid != "" {
+				os.Setenv("ICS_OID", oid)
 			}
 			if cmd.Flags().Changed("verbose") {
 				v, _ := cmd.Flags().GetInt("verbose")

@@ -1,10 +1,33 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/tidwall/gjson"
 )
+
+// BackendError is the typed form of the "HTTP 200 + body error" pattern, so
+// callers can branch on the specific error_code (e.g. 10001, which the backend
+// returns even after a resource was already persisted).
+type BackendError struct {
+	Message string
+	Code    string
+}
+
+func (e *BackendError) Error() string {
+	return fmt.Sprintf("%s (error_code %s)", e.Message, e.Code)
+}
+
+// ErrorCode returns the backend error_code carried by err, or "" if err is not
+// a BackendError.
+func ErrorCode(err error) string {
+	var be *BackendError
+	if errors.As(err, &be) {
+		return be.Code
+	}
+	return ""
+}
 
 // BodyError detects the backend's "HTTP 200 + body error" pattern. The shared
 // common-lib exception handler wraps business/internal ErrorCodeException into a
@@ -16,7 +39,7 @@ func BodyError(body []byte) error {
 	msg := gjson.GetBytes(body, "error")
 	code := gjson.GetBytes(body, "error_code")
 	if msg.Exists() && msg.String() != "" && code.Exists() {
-		return fmt.Errorf("%s (error_code %s)", msg.String(), code.String())
+		return &BackendError{Message: msg.String(), Code: code.String()}
 	}
 	return nil
 }

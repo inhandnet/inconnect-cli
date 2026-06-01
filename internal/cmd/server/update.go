@@ -30,10 +30,10 @@ func newCmdUpdate(f *factory.Factory) *cobra.Command {
 			if opts.Subnet != "" {
 				body["subnet"] = opts.Subnet
 			}
-			if opts.SecondIncrement != 0 {
+			if cmd.Flags().Changed("second-increment") {
 				body["secondIncrement"] = opts.SecondIncrement
 			}
-			if opts.ThirdIncrement != 0 {
+			if cmd.Flags().Changed("third-increment") {
 				body["thirdIncrement"] = opts.ThirdIncrement
 			}
 

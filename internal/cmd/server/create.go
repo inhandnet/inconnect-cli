@@ -91,7 +91,7 @@ func newCmdCreate(f *factory.Factory) *cobra.Command {
 			}
 
 			cmdutil.WriteCreated(f, "Server", respBody)
-			return iostreams.FormatOutput(respBody, f.IO, f.IO.Output)
+			return iostreams.FormatOutput(redactBody(cmd, respBody), f.IO, f.IO.Output)
 		},
 	}
 
@@ -107,7 +107,7 @@ func newCmdCreate(f *factory.Factory) *cobra.Command {
 	cmd.Flags().IntVar(&opts.NodePort, "node-port", 0, "Kubernetes node port")
 	cmd.Flags().StringVar(&opts.ServiceType, "service-type", "", "Kubernetes service type")
 	cmd.Flags().StringVar(&opts.Proto, "proto", "", "Protocol (tcp or udp)")
-	cmd.Flags().BoolVar(&opts.Deploy, "deploy", true, "Deploy server after creation")
+	cmd.Flags().BoolVar(&opts.Deploy, "deploy", false, "Deploy server (provision K8s pod) after creation; default creates the DB record only")
 
 	return cmd
 }

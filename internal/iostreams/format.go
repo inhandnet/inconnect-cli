@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/itchyny/gojq"
 	"github.com/tidwall/gjson"
@@ -21,7 +22,7 @@ func FormatOutput(body []byte, ios *IOStreams, output string) error {
 
 	switch output {
 	case "table":
-		return formatTable(data, ios.Out, ios.IsTTY)
+		return formatTable(data, ios.Out)
 	case "yaml":
 		return formatYAML(data, ios.Out)
 	default:
@@ -45,16 +46,16 @@ func formatJSON(data []byte, w io.Writer, isTTY bool) error {
 	return err
 }
 
-func formatTable(data []byte, w io.Writer, isTTY bool) error {
+func formatTable(data []byte, w io.Writer) error {
 	parsed := gjson.ParseBytes(data)
 
 	if parsed.IsArray() {
-		return formatArrayTable(parsed, w, isTTY)
+		return formatArrayTable(parsed, w)
 	}
 	return formatObjectTable(parsed, w)
 }
 
-func formatArrayTable(arr gjson.Result, w io.Writer, isTTY bool) error {
+func formatArrayTable(arr gjson.Result, w io.Writer) error {
 	items := arr.Array()
 	if len(items) == 0 {
 		fmt.Fprintln(w, "(no results)")
@@ -67,30 +68,45 @@ func formatArrayTable(arr gjson.Result, w io.Writer, isTTY bool) error {
 		return true
 	})
 
-	if isTTY {
-		header := make([]string, len(keys))
-		for i, k := range keys {
-			header[i] = strings.ToUpper(k)
-		}
-		fmt.Fprintln(w, strings.Join(header, "\t"))
+	tw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
+
+	header := make([]string, len(keys))
+	for i, k := range keys {
+		header[i] = strings.ToUpper(k)
 	}
+	fmt.Fprintln(tw, strings.Join(header, "\t"))
 
 	for _, item := range items {
 		vals := make([]string, len(keys))
 		for i, k := range keys {
-			vals[i] = item.Get(k).String()
+			vals[i] = cell(item.Get(k).String())
 		}
-		fmt.Fprintln(w, strings.Join(vals, "\t"))
+		fmt.Fprintln(tw, strings.Join(vals, "\t"))
 	}
-	return nil
+	return tw.Flush()
 }
 
 func formatObjectTable(obj gjson.Result, w io.Writer) error {
+	tw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
 	obj.ForEach(func(key, value gjson.Result) bool {
-		fmt.Fprintf(w, "%s:\t%s\n", key.String(), value.String())
+		fmt.Fprintf(tw, "%s\t%s\n", key.String(), cell(value.String()))
 		return true
 	})
-	return nil
+	return tw.Flush()
+}
+
+const maxCellWidth = 48
+
+// cell flattens a value for single-row table display: embedded tabs/newlines
+// would corrupt column alignment, so collapse them to spaces, and overly long
+// values (nested JSON, certs) are truncated so one wide column can't blow out
+// the whole table. Use -o json/yaml or --jq for full values.
+func cell(s string) string {
+	s = strings.NewReplacer("\t", " ", "\n", " ", "\r", " ").Replace(s)
+	if r := []rune(s); len(r) > maxCellWidth {
+		return string(r[:maxCellWidth-1]) + "…"
+	}
+	return s
 }
 
 func formatYAML(data []byte, w io.Writer) error {

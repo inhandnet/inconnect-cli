@@ -87,6 +87,7 @@ func newCmdSwitchOrg(f *factory.Factory) *cobra.Command {
 			if tokenResp.ExpiresIn > 0 {
 				ctx.ExpiresAt = time.Now().Add(time.Duration(tokenResp.ExpiresIn) * time.Second)
 			}
+			ctx.OrgID = oid
 
 			if err := f.SaveConfig(); err != nil {
 				return err

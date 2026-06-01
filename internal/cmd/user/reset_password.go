@@ -19,7 +19,7 @@ func newCmdResetPassword(f *factory.Factory) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "reset-password <uid>",
-		Short: "Reset a user's password (sends reset email)",
+		Short: "Reset a user's password (NOT usable by admins — see below)",
 		Long: `Reset a user's password.
 
 <uid> is the account ID (the 'uid' field from 'user list', not 'id').

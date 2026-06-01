@@ -12,6 +12,8 @@ func NewCmdServer(f *factory.Factory) *cobra.Command {
 		Short:   "Manage VPN servers",
 	}
 
+	cmd.PersistentFlags().Bool("show-secrets", false, "Reveal private keys in output (redacted by default)")
+
 	cmd.AddCommand(
 		newCmdList(f),
 		newCmdGet(f),

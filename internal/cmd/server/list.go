@@ -38,7 +38,7 @@ func newCmdList(f *factory.Factory) *cobra.Command {
 				return err
 			}
 
-			return iostreams.FormatOutput(body, f.IO, f.IO.Output)
+			return iostreams.FormatOutput(redactBody(cmd, body), f.IO, f.IO.Output)
 		},
 	}
 }
