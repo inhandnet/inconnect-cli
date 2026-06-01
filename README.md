@@ -445,8 +445,21 @@ make install     # Install to GOPATH
 make test        # Run tests
 make fmt         # Format code (golangci-lint fmt)
 make lint        # Run golangci-lint
+make docs        # Generate per-command Markdown reference docs (cmd/docgen)
 make clean       # Clean build artifacts
 ```
+
+### Command reference docs & skills sync
+
+`make docs` runs `cmd/docgen`, which walks the same command tree as `cmd/ics`
+and writes one Markdown file per subcommand (filenames use underscores, e.g.
+`ics_router_list.md`). Override the output directory with `DOCS_DIR`.
+
+These docs power the [`ics-skills`](https://github.com/inhandnet/ics-skills)
+Claude Code plugin. On every tagged release, the `sync-skills` job in
+`.github/workflows/release.yml` regenerates them and pushes the result to the
+skills repo, so the skill's command details always match the released CLI. The
+job needs a `SKILLS_SYNC_TOKEN` repo secret with write access to `ics-skills`.
 
 ### Project structure
 

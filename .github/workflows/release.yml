@@ -1,0 +1,97 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  GOPROXY: https://goproxy.cn,direct
+  GONOSUMDB: "*"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.24"
+      - run: CGO_ENABLED=0 go test ./... -count=1
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.24"
+
+      - name: Build all platforms
+        run: make build-all VERSION=${{ github.ref_name }} COMMIT=${{ github.sha }}
+
+      - name: Generate checksums
+        run: |
+          cd bin
+          sha256sum ics-* > checksums.txt
+          cat checksums.txt
+
+      - name: Extract release notes
+        id: notes
+        run: |
+          TAG=${{ github.ref_name }}
+          if [ -f CHANGELOG.md ]; then
+            sed -n "/^## ${TAG}/,/^## v/{/^## v/!p}" CHANGELOG.md | sed '1d' > /tmp/release_notes.md
+          fi
+          if [ ! -s /tmp/release_notes.md ]; then
+            echo "Release ${TAG}" > /tmp/release_notes.md
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2.2.1
+        with:
+          body_path: /tmp/release_notes.md
+          files: |
+            bin/ics-*
+            bin/checksums.txt
+
+  # Keep the ics-skills plugin's command references in sync with each CLI
+  # release: regenerate them from this tag's command tree and push to the
+  # skills repo. Requires a SKILLS_SYNC_TOKEN secret with write access to
+  # inhandnet/ics-skills (a fine-grained PAT or deploy key).
+  sync-skills:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ics-cli
+        uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.24"
+
+      - name: Checkout ics-skills
+        uses: actions/checkout@v5
+        with:
+          repository: inhandnet/ics-skills
+          token: ${{ secrets.SKILLS_SYNC_TOKEN }}
+          path: ics-skills
+
+      - name: Regenerate command references
+        run: make docs DOCS_DIR=ics-skills/skills/ics/references/commands
+
+      - name: Commit and push if changed
+        run: |
+          cd ics-skills
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain skills/ics/references/commands)" ]; then
+            git add skills/ics/references/commands
+            git commit -m "Sync command references for ics-cli ${{ github.ref_name }}"
+            git push
+          else
+            echo "No command reference changes for ${{ github.ref_name }}."
+          fi

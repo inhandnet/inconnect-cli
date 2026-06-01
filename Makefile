@@ -6,7 +6,7 @@ LDFLAGS  = -s -w \
   -X github.com/inhandnet/ics-cli/internal/build.Commit=$(COMMIT) \
   -X github.com/inhandnet/ics-cli/internal/build.Date=$(DATE)
 
-.PHONY: build build-all install test lint fmt clean
+.PHONY: build build-all install test lint fmt clean docs
 
 build:
 	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o bin/ics ./cmd/ics
@@ -33,3 +33,10 @@ fmt:
 
 clean:
 	rm -rf bin/
+
+# Generate per-command Markdown reference docs. Pass DOCS_DIR to override the
+# output directory (the release workflow points this at the ics-skills repo's
+# references/commands so a release regenerates the skills' command details).
+DOCS_DIR ?= docs/commands
+docs:
+	go run ./cmd/docgen $(DOCS_DIR)
