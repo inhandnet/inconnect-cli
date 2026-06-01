@@ -1,0 +1,46 @@
+package firmware
+
+import (
+	"github.com/inhandnet/ics-cli/internal/cmdutil"
+	"github.com/inhandnet/ics-cli/internal/factory"
+	"github.com/inhandnet/ics-cli/internal/iostreams"
+	"github.com/spf13/cobra"
+)
+
+type listOptions struct {
+	cmdutil.ListFlags
+	Model string
+}
+
+func newCmdList(f *factory.Factory) *cobra.Command {
+	opts := &listOptions{}
+
+	cmd := &cobra.Command{
+		Use:     "list",
+		Aliases: []string{"ls"},
+		Short:   "List firmware packages",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client, err := f.APIClient()
+			if err != nil {
+				return err
+			}
+
+			q := cmdutil.NewQuery(cmd, &opts.ListFlags)
+			if opts.Model != "" {
+				q.Set("model", opts.Model)
+			}
+
+			body, err := client.Get("/api/firmware", q)
+			if err != nil {
+				return err
+			}
+
+			return iostreams.FormatOutput(body, f.IO, f.IO.Output)
+		},
+	}
+
+	opts.Register(cmd)
+	cmd.Flags().StringVar(&opts.Model, "model", "", "Filter by device model")
+
+	return cmd
+}

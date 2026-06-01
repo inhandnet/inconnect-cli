@@ -1,0 +1,68 @@
+package cmd
+
+import (
+	"os"
+	"strconv"
+
+	"github.com/inhandnet/ics-cli/internal/build"
+	"github.com/inhandnet/ics-cli/internal/debug"
+	"github.com/inhandnet/ics-cli/internal/factory"
+	"github.com/spf13/cobra"
+)
+
+func NewCmdRoot(f *factory.Factory) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:           "ics",
+		Short:         "InConnect CLI — manage VPN networks, servers, and routers",
+		Version:       build.Version,
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if v, _ := cmd.Flags().GetBool("debug"); v {
+				debug.Enabled = true
+			}
+			if os.Getenv("ICS_DEBUG") != "" {
+				debug.Enabled = true
+			}
+
+			output, _ := cmd.Flags().GetString("output")
+			jq, _ := cmd.Flags().GetString("jq")
+			if jq != "" {
+				f.IO.JQ = jq
+				if !cmd.Flags().Changed("output") {
+					output = "json"
+				}
+			}
+			if output == "" {
+				if f.IO.IsTTY {
+					output = "table"
+				} else {
+					output = "json"
+				}
+			}
+			f.IO.Output = output
+
+			if oid, _ := cmd.Flags().GetString("oid"); oid != "" {
+				os.Setenv("ICS_OID", oid)
+			}
+			if ctx, _ := cmd.Flags().GetString("context"); ctx != "" {
+				os.Setenv("ICS_CONTEXT", ctx)
+			}
+			if cmd.Flags().Changed("verbose") {
+				v, _ := cmd.Flags().GetInt("verbose")
+				os.Setenv("ICS_VERBOSE", strconv.Itoa(v))
+			}
+
+			return nil
+		},
+	}
+
+	cmd.PersistentFlags().StringP("output", "o", "", "Output format: json, table, yaml (default: table for TTY, json otherwise)")
+	cmd.PersistentFlags().String("jq", "", "Filter JSON output using a jq expression")
+	cmd.PersistentFlags().String("oid", "", "Organization ID")
+	cmd.PersistentFlags().String("context", "", "Config context to use")
+	cmd.PersistentFlags().Bool("debug", false, "Enable debug output")
+	cmd.PersistentFlags().Int("verbose", 100, "API field verbosity for GET requests (1-100, higher = more fields; 0 to omit)")
+
+	return cmd
+}
