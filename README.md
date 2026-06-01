@@ -48,7 +48,7 @@ ics auth orgs           # Organizations you belong to
 ics router list
 ```
 
-> **Tip — `--oid`:** most write/query endpoints scope to an organization. The web app injects the org ID globally; the CLI does not, so pass `--oid <org-id>` explicitly when a command targets org-scoped resources (you'll get an HTTP error otherwise).
+> **Tip — `--oid`:** most write/query endpoints scope to an organization. After `ics auth switch-org <org-id>`, that org is saved on the active context and used as the default `--oid` for subsequent commands, so you usually don't need to repeat it. Pass `--oid <org-id>` explicitly to override the default or target a different org.
 
 ## Command reference
 
@@ -170,7 +170,8 @@ ics network members <id> ... --oid <oid>             # Update members (routers +
 ```bash
 ics server list --oid <oid>                          # List servers
 ics server get <id> --oid <oid>                      # Server details
-ics server create ... --oid <oid>                    # Create
+ics server create ... --oid <oid>                    # Create (DB record only by default)
+ics server create ... --deploy --oid <oid>           # Create AND provision the K8s Pod
 ics server update <id> ... --oid <oid>               # Update
 ics server delete <id> --oid <oid>                   # Delete
 ics server deploy <id> --oid <oid>                   # Deploy / redeploy (K8s)
@@ -181,6 +182,10 @@ ics server issue-keypair --oid <oid>                 # Issue new server key pair
 ics server networks <id> --oid <oid>                 # Networks bound to a server
 ```
 
+> **Secrets:** `server get`/`list`/`create` output redacts the server's RSA private key (`keyPair.key`) by default. Pass `--show-secrets` to reveal it.
+>
+> **`--deploy`:** `server create` defaults to `--deploy=false`, writing only the DB record. Pass `--deploy` to also provision the OpenVPN Pod on Kubernetes.
+
 ### VPN users (`user`)
 
 ```bash
@@ -190,7 +195,7 @@ ics user update <id> ... --oid <oid>                 # Update
 ics user delete <id> --oid <oid>                     # Delete
 ics user lock <id> --oid <oid>                       # Lock
 ics user unlock <id> --oid <oid>                     # Unlock
-ics user reset-password <id> --oid <oid>             # Send password-reset email
+ics user reset-password <id> --oid <oid>             # Self-service reset flow (needs a code; not an admin one-shot)
 ics user bind-mac <id> ... --oid <oid>               # Bind MAC addresses
 ics user set-float-address <id> ... --oid <oid>      # Toggle floating IP
 ics user issue-keypair <id> --oid <oid>              # Issue a key pair
@@ -376,7 +381,7 @@ Use `-o` / `--output` to choose the format. Default is `table` in a terminal and
 
 | Format | TTY | Piped |
 |--------|-----|-------|
-| `table` | Aligned table | TSV |
+| `table` | Aligned table with header | Same (aligned, with header) |
 | `json` | Colorized pretty JSON | Compact JSON |
 | `yaml` | YAML | YAML |
 
@@ -384,6 +389,8 @@ Use `-o` / `--output` to choose the format. Default is `table` in a terminal and
 ics router list -o json                               # Force JSON
 ics router list --jq '.[].name'                       # Filter with a jq expression
 ```
+
+> **Table truncation:** table cells longer than ~48 characters are truncated with `…` so one wide column (e.g. an embedded cert) can't blow out the layout. Use `-o json`/`-o yaml` or `--jq` to get full values.
 
 > **jq + content fields:** `--jq '.content'` re-encodes the string (quotes + literal `\n`). To feed config back into `device-config set --content-file`, decode it with real `jq`/`python` `json.loads` first.
 
@@ -419,6 +426,8 @@ Stores all context information (host, token, etc.) and is managed via the `ics c
 ## Error handling
 
 The backend's shared exception handler returns **HTTP 200 with a top-level `{"error": ..., "error_code": ...}`** body for business/internal errors (only auth errors map to 403/404). The CLI detects this centrally and surfaces it as a non-zero exit code with the message, so scripts and agents can rely on exit status.
+
+**`internal_error` (10001) on create/transfer:** the backend sometimes persists the resource and *then* fails a follow-up step (typically certificate issuance), returning 10001 even though the resource exists. For `user create` and `router transfer`, the CLI re-queries to confirm: if the resource is actually there, it prints a warning with a remediation hint (e.g. run `issue-keypair`) and **exits 0**; only if the resource is genuinely missing does it exit non-zero. So a clean exit on these commands means the resource exists, even if a later step needs a retry.
 
 ## Development
 
