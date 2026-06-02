@@ -5,6 +5,24 @@ All notable changes to the InConnect CLI are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Diagnostics commands** for troubleshooting router connectivity across data
+  sources:
+  - `connection-log list` — VPN session logs (vpn-controller): who connected /
+    disconnected, bytes, duration, virtual IP.
+  - `vpn-event list` — VPN auth/connection events, including auth failures with a
+    reason (e.g. `invalid_cert`).
+  - `router connection-events` — device MQTT online/offline events (site), with
+    disconnect reasons such as `timeout` / `kicked`.
+  - `server logs` — stream the org's OpenVPN server Pod logs (`--tail`/`--since`,
+    raw text or line-wrapped JSON); admin only.
+  - `router diagnose` — one-shot aggregation of the above (plus device
+    registration events) into a single block-grouped JSON report; per-source
+    failures degrade gracefully to empty arrays.
+
 ## v0.1.0 - 2026-06-02
 
 First public release of the InConnect CLI — a command-line client for managing

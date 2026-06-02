@@ -37,6 +37,8 @@ func NewCmdRouter(f *factory.Factory) *cobra.Command {
 		newCmdTrafficDay(f),
 		newCmdOnlineTrend(f),
 		newCmdSignal(f),
+		newCmdConnectionEvents(f),
+		newCmdDiagnose(f),
 	)
 
 	return cmd
