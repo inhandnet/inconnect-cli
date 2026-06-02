@@ -12,6 +12,7 @@ import (
 	"github.com/inhandnet/inconnect-cli/internal/cmd/banner"
 	"github.com/inhandnet/inconnect-cli/internal/cmd/billing"
 	cmdconfig "github.com/inhandnet/inconnect-cli/internal/cmd/config"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/connectionlog"
 	"github.com/inhandnet/inconnect-cli/internal/cmd/datausage"
 	"github.com/inhandnet/inconnect-cli/internal/cmd/drc"
 	"github.com/inhandnet/inconnect-cli/internal/cmd/endpoint"
@@ -26,6 +27,7 @@ import (
 	"github.com/inhandnet/inconnect-cli/internal/cmd/system"
 	"github.com/inhandnet/inconnect-cli/internal/cmd/task"
 	"github.com/inhandnet/inconnect-cli/internal/cmd/user"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/vpnevent"
 	"github.com/inhandnet/inconnect-cli/internal/factory"
 )
 
@@ -53,6 +55,8 @@ datausage.NewCmdDataUsage(f),
 		mail.NewCmdMail(f),
 		registerlog.NewCmdRegisterLog(f),
 		auditlog.NewCmdAuditLog(f),
+		connectionlog.NewCmdConnectionLog(f),
+		vpnevent.NewCmdVpnEvent(f),
 		system.NewCmdSystem(f),
 		cmdapi.NewCmdAPI(f),
 	)

@@ -22,6 +22,7 @@ func NewCmdServer(f *factory.Factory) *cobra.Command {
 		newCmdDelete(f),
 		newCmdDeploy(f),
 		newCmdCommand(f),
+		newCmdLogs(f),
 		newCmdNetworks(f),
 		newCmdStop(f),
 		newCmdRecover(f),
