@@ -1,0 +1,15 @@
+version: "2"
+
+linters:
+  settings:
+    errcheck:
+      # These functions write to terminal streams / buffers, close resources in
+      # defers, or set process env — their error returns are not actionable here,
+      # so we exclude them rather than littering call sites with `_ =`.
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+        - (io.Closer).Close
+        - (*os.File).Close
+        - os.Setenv
