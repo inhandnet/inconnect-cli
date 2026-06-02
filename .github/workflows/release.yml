@@ -36,7 +36,7 @@ jobs:
       - name: Generate checksums
         run: |
           cd bin
-          sha256sum ics-* > checksums.txt
+          sha256sum inconnect-* > checksums.txt
           cat checksums.txt
 
       - name: Extract release notes
@@ -55,10 +55,10 @@ jobs:
         with:
           body_path: /tmp/release_notes.md
           files: |
-            bin/ics-*
+            bin/inconnect-*
             bin/checksums.txt
 
-  # Keep the ics-skills plugin's command references in sync with each CLI
+  # Keep the inconnect-skills plugin's command references in sync with each CLI
   # release: regenerate them from this tag's command tree and push to the
   # skills repo. Requires a SKILLS_SYNC_TOKEN secret with write access to
   # inhandnet/inconnect-skills (a fine-grained PAT or deploy key).
@@ -66,31 +66,31 @@ jobs:
     needs: release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout ics-cli
+      - name: Checkout inconnect-cli
         uses: actions/checkout@v5
 
       - uses: actions/setup-go@v6
         with:
           go-version: "1.24"
 
-      - name: Checkout ics-skills
+      - name: Checkout inconnect-skills
         uses: actions/checkout@v5
         with:
           repository: inhandnet/inconnect-skills
           token: ${{ secrets.SKILLS_SYNC_TOKEN }}
-          path: ics-skills
+          path: inconnect-skills
 
       - name: Regenerate command references
-        run: make docs DOCS_DIR=ics-skills/skills/ics/references/commands
+        run: make docs DOCS_DIR=inconnect-skills/skills/inconnect/references/commands
 
       - name: Commit and push if changed
         run: |
-          cd ics-skills
+          cd inconnect-skills
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if [ -n "$(git status --porcelain skills/ics/references/commands)" ]; then
-            git add skills/ics/references/commands
-            git commit -m "Sync command references for ics-cli ${{ github.ref_name }}"
+          if [ -n "$(git status --porcelain skills/inconnect/references/commands)" ]; then
+            git add skills/inconnect/references/commands
+            git commit -m "Sync command references for inconnect-cli ${{ github.ref_name }}"
             git push
           else
             echo "No command reference changes for ${{ github.ref_name }}."
