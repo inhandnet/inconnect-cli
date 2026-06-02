@@ -137,7 +137,15 @@ inconnect router online-trend <id> --oid <oid>             # Online/offline time
 inconnect router online-trend <id> --after 2026-06-01 --before 2026-06-02 --oid <oid>
 inconnect router signal <id> --oid <oid>                   # Cellular signal: strength + quality
 inconnect router signal <id> --fields rssi,rsrp --after 2026-06-01 --oid <oid>
+
+# Diagnostics
+inconnect router connection-events <id> --oid <oid>        # Device MQTT online/offline events (site)
+inconnect router connection-events <id> --event-type offline --after 2026-06-01 --oid <oid>
+inconnect router diagnose <id> --oid <oid>                 # Aggregate multi-source diagnostics into one report
+inconnect router diagnose <id> --after 2026-06-01 --before 2026-06-02 --oid <oid>
 ```
+
+> **`router diagnose`** pulls a router's diagnostics from several sources in one shot — VPN session logs (`connection-log`), VPN auth/connection events (`vpn-event`), device MQTT online/offline events (`connection-events`), and device registration events — and returns a single JSON object keyed by source. Sources that fail are reported to stderr and left as empty arrays (best-effort), so one permission gap doesn't abort the whole report. See the **Diagnostics** section for the standalone per-source commands.
 
 **Which "config" command?** These four look similar but read/write different things:
 
@@ -180,7 +188,12 @@ inconnect server recover --oid <oid>                       # Recover org servers
 inconnect server command --oid <oid> ...                   # Send a command to the org's server
 inconnect server issue-keypair --oid <oid>                 # Issue new server key pair(s)
 inconnect server networks <id> --oid <oid>                 # Networks bound to a server
+inconnect server logs <id> --oid <oid>                     # Stream the OpenVPN server Pod logs (admin)
+inconnect server logs <id> --tail 500 --since 1h --oid <oid>
+inconnect server logs <id> --format json --oid <oid>       # Line-wrapped JSON instead of raw text
 ```
+
+> **`server logs`** reads the org's OpenVPN server Pod logs in real time (not persisted — only the current Pod lifecycle is available; a restart loses previous output). `--tail` defaults to 200 (max 2000), `--since` accepts a window like `10m`/`1h`, and `--format` is `text` (raw) or `json` (line-wrapped). Logs may contain client real IPs, so this requires admin.
 
 > **Secrets:** `server get`/`list`/`create` output redacts the server's RSA private key (`keyPair.key`) by default. Pass `--show-secrets` to reveal it.
 >
@@ -302,6 +315,30 @@ inconnect org settings --oid <oid>                         # Current org setting
 inconnect org update-settings ... --oid <oid>              # Update settings
 inconnect org export                                       # Export orgs to XLSX
 ```
+
+### Diagnostics (`connection-log`, `vpn-event`)
+
+The VPN-layer diagnostic logs that back `router diagnose`. Both are admin-only, org-scoped, and support `--after`/`--before` plus pagination.
+
+```bash
+# VPN session logs — who connected/disconnected, bytes, duration, virtual IP
+inconnect connection-log list --oid <oid>
+inconnect connection-log list --rid <router-id> --status active --oid <oid>
+inconnect connection-log list --username <name> --type router --after 2026-06-01 --oid <oid>
+
+# VPN auth/connection events — auth failures with reason (e.g. invalid_cert)
+inconnect vpn-event list --oid <oid>
+inconnect vpn-event list --type auth_failed --rid <router-id> --oid <oid>
+inconnect vpn-event list --type auth_failed,connected --after 2026-06-01 --oid <oid>
+```
+
+| Command | Source | Notes |
+|---|---|---|
+| `connection-log list` | vpn-controller | VPN session logs; filter by `--rid` `--uid` `--username` `--type user\|router` `--status active\|closed` |
+| `vpn-event list` | vpn-controller | VPN auth/connection events; `--type` takes a comma-separated list (e.g. `auth_failed`) |
+| `router connection-events` | site | device MQTT online/offline events (see the `router` section) |
+
+> These are the per-source query tools. For a single device, `router diagnose <router-id>` pulls all of them into one report.
 
 ### Other
 
