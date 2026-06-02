@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/inhandnet/ics-cli/internal/api"
-	"github.com/inhandnet/ics-cli/internal/config"
-	"github.com/inhandnet/ics-cli/internal/iostreams"
+	"github.com/inhandnet/inconnect-cli/internal/api"
+	"github.com/inhandnet/inconnect-cli/internal/config"
+	"github.com/inhandnet/inconnect-cli/internal/iostreams"
 )
 
 type Factory struct {
@@ -71,7 +71,7 @@ func (f *Factory) APIClient() (*api.APIClient, error) {
 	}
 
 	verbose := 100
-	if v := os.Getenv("ICS_VERBOSE"); v != "" {
+	if v := os.Getenv("INCONNECT_VERBOSE"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
 			verbose = n
 		}

@@ -61,7 +61,7 @@ jobs:
   # Keep the ics-skills plugin's command references in sync with each CLI
   # release: regenerate them from this tag's command tree and push to the
   # skills repo. Requires a SKILLS_SYNC_TOKEN secret with write access to
-  # inhandnet/ics-skills (a fine-grained PAT or deploy key).
+  # inhandnet/inconnect-skills (a fine-grained PAT or deploy key).
   sync-skills:
     needs: release
     runs-on: ubuntu-latest
@@ -76,7 +76,7 @@ jobs:
       - name: Checkout ics-skills
         uses: actions/checkout@v5
         with:
-          repository: inhandnet/ics-skills
+          repository: inhandnet/inconnect-skills
           token: ${{ secrets.SKILLS_SYNC_TOKEN }}
           path: ics-skills
 

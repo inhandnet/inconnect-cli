@@ -18,7 +18,7 @@ func DefaultPath() string {
 	if err != nil {
 		dir = filepath.Join(os.Getenv("HOME"), ".config")
 	}
-	return filepath.Join(dir, "ics", "config.yaml")
+	return filepath.Join(dir, "inconnect", "config.yaml")
 }
 
 func Load(path string) (*Config, error) {
@@ -53,20 +53,20 @@ func Save(cfg *Config, path string) error {
 func (c *Config) ActiveContext() (*Context, error) {
 	name := c.ActiveContextName()
 	if name == "" {
-		return nil, fmt.Errorf("no active context; run 'ics auth login' first")
+		return nil, fmt.Errorf("no active context; run 'inconnect auth login' first")
 	}
 	ctx, ok := c.Contexts[name]
 	if !ok {
 		return nil, fmt.Errorf("context %q not found", name)
 	}
-	if h := os.Getenv("ICS_HOST"); h != "" {
+	if h := os.Getenv("INCONNECT_HOST"); h != "" {
 		ctx.Host = h
 	}
 	return ctx, nil
 }
 
 func (c *Config) ActiveContextName() string {
-	if name := os.Getenv("ICS_CONTEXT"); name != "" {
+	if name := os.Getenv("INCONNECT_CONTEXT"); name != "" {
 		return name
 	}
 	return c.CurrentContext

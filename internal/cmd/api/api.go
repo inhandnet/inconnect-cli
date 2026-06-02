@@ -5,8 +5,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/inhandnet/ics-cli/internal/factory"
-	"github.com/inhandnet/ics-cli/internal/iostreams"
+	"github.com/inhandnet/inconnect-cli/internal/factory"
+	"github.com/inhandnet/inconnect-cli/internal/iostreams"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +16,7 @@ func NewCmdAPI(f *factory.Factory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "api <path>",
 		Short: "Make an authenticated API request",
-		Long:  "Make a raw API request to the InConnect server. Example: ics api /api/invpn/networks/list",
+		Long:  "Make a raw API request to the InConnect server. Example: inconnect api /api/invpn/networks/list",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := f.APIClient()

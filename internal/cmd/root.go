@@ -4,15 +4,15 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/inhandnet/ics-cli/internal/build"
-	"github.com/inhandnet/ics-cli/internal/debug"
-	"github.com/inhandnet/ics-cli/internal/factory"
+	"github.com/inhandnet/inconnect-cli/internal/build"
+	"github.com/inhandnet/inconnect-cli/internal/debug"
+	"github.com/inhandnet/inconnect-cli/internal/factory"
 	"github.com/spf13/cobra"
 )
 
 func NewCmdRoot(f *factory.Factory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:           "ics",
+		Use:           "inconnect",
 		Short:         "InConnect CLI — manage VPN networks, servers, and routers",
 		Version:       build.Version,
 		SilenceUsage:  true,
@@ -21,7 +21,7 @@ func NewCmdRoot(f *factory.Factory) *cobra.Command {
 			if v, _ := cmd.Flags().GetBool("debug"); v {
 				debug.Enabled = true
 			}
-			if os.Getenv("ICS_DEBUG") != "" {
+			if os.Getenv("INCONNECT_DEBUG") != "" {
 				debug.Enabled = true
 			}
 
@@ -43,12 +43,12 @@ func NewCmdRoot(f *factory.Factory) *cobra.Command {
 			f.IO.Output = output
 
 			if ctx, _ := cmd.Flags().GetString("context"); ctx != "" {
-				os.Setenv("ICS_CONTEXT", ctx)
+				os.Setenv("INCONNECT_CONTEXT", ctx)
 			}
 
 			// Resolve the effective org ID: an explicit --oid wins; otherwise fall
 			// back to the active context's saved OrgID (set via 'auth switch-org').
-			// We backfill both the flag and ICS_OID so every read path sees it.
+			// We backfill both the flag and INCONNECT_OID so every read path sees it.
 			oid, _ := cmd.Flags().GetString("oid")
 			if oid == "" {
 				if cfg, err := f.Config(); err == nil {
@@ -59,11 +59,11 @@ func NewCmdRoot(f *factory.Factory) *cobra.Command {
 				}
 			}
 			if oid != "" {
-				os.Setenv("ICS_OID", oid)
+				os.Setenv("INCONNECT_OID", oid)
 			}
 			if cmd.Flags().Changed("verbose") {
 				v, _ := cmd.Flags().GetInt("verbose")
-				os.Setenv("ICS_VERBOSE", strconv.Itoa(v))
+				os.Setenv("INCONNECT_VERBOSE", strconv.Itoa(v))
 			}
 
 			return nil

@@ -1,10 +1,10 @@
-// Command docgen generates Markdown reference docs for every ics subcommand.
+// Command docgen generates Markdown reference docs for every inconnect subcommand.
 //
-// It mirrors the command tree assembled in cmd/ics/main.go and writes one
+// It mirrors the command tree assembled in cmd/inconnect/main.go and writes one
 // Markdown file per command into the target directory (default: docs/commands,
 // overridable via the first CLI argument). Filenames have spaces replaced with
-// underscores so the ics-skills plugin can map a subcommand path to its
-// reference file (e.g. "ics router list" -> ics_router_list.md).
+// underscores so the inconnect-skills plugin can map a subcommand path to its
+// reference file (e.g. "inconnect router list" -> inconnect_router_list.md).
 package main
 
 import (
@@ -16,29 +16,29 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 
-	"github.com/inhandnet/ics-cli/internal/cmd"
-	"github.com/inhandnet/ics-cli/internal/cmd/alert"
-	cmdapi "github.com/inhandnet/ics-cli/internal/cmd/api"
-	"github.com/inhandnet/ics-cli/internal/cmd/auditlog"
-	"github.com/inhandnet/ics-cli/internal/cmd/auth"
-	"github.com/inhandnet/ics-cli/internal/cmd/banner"
-	"github.com/inhandnet/ics-cli/internal/cmd/billing"
-	cmdconfig "github.com/inhandnet/ics-cli/internal/cmd/config"
-	"github.com/inhandnet/ics-cli/internal/cmd/datausage"
-	"github.com/inhandnet/ics-cli/internal/cmd/drc"
-	"github.com/inhandnet/ics-cli/internal/cmd/endpoint"
-	"github.com/inhandnet/ics-cli/internal/cmd/firmware"
-	"github.com/inhandnet/ics-cli/internal/cmd/mail"
-	"github.com/inhandnet/ics-cli/internal/cmd/network"
-	"github.com/inhandnet/ics-cli/internal/cmd/org"
-	"github.com/inhandnet/ics-cli/internal/cmd/registerlog"
-	"github.com/inhandnet/ics-cli/internal/cmd/role"
-	"github.com/inhandnet/ics-cli/internal/cmd/router"
-	"github.com/inhandnet/ics-cli/internal/cmd/server"
-	"github.com/inhandnet/ics-cli/internal/cmd/system"
-	"github.com/inhandnet/ics-cli/internal/cmd/task"
-	"github.com/inhandnet/ics-cli/internal/cmd/user"
-	"github.com/inhandnet/ics-cli/internal/factory"
+	"github.com/inhandnet/inconnect-cli/internal/cmd"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/alert"
+	cmdapi "github.com/inhandnet/inconnect-cli/internal/cmd/api"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/auditlog"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/auth"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/banner"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/billing"
+	cmdconfig "github.com/inhandnet/inconnect-cli/internal/cmd/config"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/datausage"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/drc"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/endpoint"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/firmware"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/mail"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/network"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/org"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/registerlog"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/role"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/router"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/server"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/system"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/task"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/user"
+	"github.com/inhandnet/inconnect-cli/internal/factory"
 )
 
 func main() {

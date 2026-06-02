@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tidwall/gjson"
 
-	"github.com/inhandnet/ics-cli/internal/api"
-	"github.com/inhandnet/ics-cli/internal/factory"
-	"github.com/inhandnet/ics-cli/internal/iostreams"
+	"github.com/inhandnet/inconnect-cli/internal/api"
+	"github.com/inhandnet/inconnect-cli/internal/factory"
+	"github.com/inhandnet/inconnect-cli/internal/iostreams"
 )
 
 func newCmdSwitchOrg(f *factory.Factory) *cobra.Command {
@@ -19,10 +19,10 @@ func newCmdSwitchOrg(f *factory.Factory) *cobra.Command {
 		Short: "Switch to a different organization",
 		Args:  cobra.ExactArgs(1),
 		Example: `  # List your organizations first
-  ics auth orgs
+  inconnect auth orgs
 
   # Switch to another org
-  ics auth switch-org 5e0956c46aa6d10001e931e6`,
+  inconnect auth switch-org 5e0956c46aa6d10001e931e6`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := f.Config()
 			if err != nil {

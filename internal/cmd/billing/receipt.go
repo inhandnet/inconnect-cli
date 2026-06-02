@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/inhandnet/ics-cli/internal/factory"
+	"github.com/inhandnet/inconnect-cli/internal/factory"
 	"github.com/spf13/cobra"
 )
 

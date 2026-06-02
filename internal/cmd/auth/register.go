@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/inhandnet/ics-cli/internal/api"
-	"github.com/inhandnet/ics-cli/internal/factory"
-	"github.com/inhandnet/ics-cli/internal/iostreams"
+	"github.com/inhandnet/inconnect-cli/internal/api"
+	"github.com/inhandnet/inconnect-cli/internal/factory"
+	"github.com/inhandnet/inconnect-cli/internal/iostreams"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/gjson"
 )
@@ -30,10 +30,10 @@ func newCmdRegister(f *factory.Factory) *cobra.Command {
 		Use:   "register",
 		Short: "Register a new organization account",
 		Example: `  # Register on China region (default)
-  ics auth register --email user@example.com --name "My Org" --password "P@ssw0rd"
+  inconnect auth register --email user@example.com --name "My Org" --password "P@ssw0rd"
 
   # Register on dev environment
-  ics auth register --host dev --email user@example.com --name "My Org" --password "P@ssw0rd"`,
+  inconnect auth register --host dev --email user@example.com --name "My Org" --password "P@ssw0rd"`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			host, err := resolveHost(opts.Host)
 			if err != nil {

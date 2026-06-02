@@ -3,8 +3,8 @@ package cmdutil
 import (
 	"fmt"
 
-	"github.com/inhandnet/ics-cli/internal/api"
-	"github.com/inhandnet/ics-cli/internal/factory"
+	"github.com/inhandnet/inconnect-cli/internal/api"
+	"github.com/inhandnet/inconnect-cli/internal/factory"
 )
 
 func WriteCreated(f *factory.Factory, resource string, body []byte) {

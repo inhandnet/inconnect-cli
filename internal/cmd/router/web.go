@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/inhandnet/ics-cli/internal/browser"
-	"github.com/inhandnet/ics-cli/internal/factory"
-	"github.com/inhandnet/ics-cli/internal/iostreams"
+	"github.com/inhandnet/inconnect-cli/internal/browser"
+	"github.com/inhandnet/inconnect-cli/internal/factory"
+	"github.com/inhandnet/inconnect-cli/internal/iostreams"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/gjson"
 )

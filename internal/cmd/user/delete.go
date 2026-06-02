@@ -1,8 +1,8 @@
 package user
 
 import (
-	"github.com/inhandnet/ics-cli/internal/cmdutil"
-	"github.com/inhandnet/ics-cli/internal/factory"
+	"github.com/inhandnet/inconnect-cli/internal/cmdutil"
+	"github.com/inhandnet/inconnect-cli/internal/factory"
 	"github.com/spf13/cobra"
 )
 

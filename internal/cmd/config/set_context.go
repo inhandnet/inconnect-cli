@@ -3,8 +3,8 @@ package config
 import (
 	"fmt"
 
-	iconfig "github.com/inhandnet/ics-cli/internal/config"
-	"github.com/inhandnet/ics-cli/internal/factory"
+	iconfig "github.com/inhandnet/inconnect-cli/internal/config"
+	"github.com/inhandnet/inconnect-cli/internal/factory"
 	"github.com/spf13/cobra"
 )
 

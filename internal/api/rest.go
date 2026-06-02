@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/inhandnet/ics-cli/internal/debug"
+	"github.com/inhandnet/inconnect-cli/internal/debug"
 )
 
 type HTTPError struct {

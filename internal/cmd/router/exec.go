@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/inhandnet/ics-cli/internal/factory"
-	"github.com/inhandnet/ics-cli/internal/iostreams"
+	"github.com/inhandnet/inconnect-cli/internal/factory"
+	"github.com/inhandnet/inconnect-cli/internal/iostreams"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/gjson"
 )
@@ -21,8 +21,8 @@ func newCmdExec(f *factory.Factory) *cobra.Command {
 		Long: `Run a shell command on a router remotely and print its output.
 
 Examples:
-  ics router exec <id> show log
-  ics router exec <id> "ifconfig eth0"`,
+  inconnect router exec <id> show log
+  inconnect router exec <id> "ifconfig eth0"`,
 		Args: cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := f.APIClient()

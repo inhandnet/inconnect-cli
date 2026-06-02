@@ -7,10 +7,10 @@ import (
 
 	"github.com/tidwall/gjson"
 
-	"github.com/inhandnet/ics-cli/internal/api"
-	"github.com/inhandnet/ics-cli/internal/cmdutil"
-	"github.com/inhandnet/ics-cli/internal/factory"
-	"github.com/inhandnet/ics-cli/internal/iostreams"
+	"github.com/inhandnet/inconnect-cli/internal/api"
+	"github.com/inhandnet/inconnect-cli/internal/cmdutil"
+	"github.com/inhandnet/inconnect-cli/internal/factory"
+	"github.com/inhandnet/inconnect-cli/internal/iostreams"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +38,7 @@ Each VPN user has two IDs, both shown by 'user list':
   - id  : VPN user ID — used by update/set-float-address/bind-mac/issue-keypair
   - uid : account ID   — used by lock/unlock/delete/reset-password
 
-Note: --role-id is required by the server. Look up role IDs via 'ics role list'.`,
+Note: --role-id is required by the server. Look up role IDs via 'inconnect role list'.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := f.APIClient()
 			if err != nil {
@@ -86,7 +86,7 @@ Note: --role-id is required by the server. Look up role IDs via 'ics role list'.
 					if created := findUserByEmail(client, q.Get("oid"), opts.Email); created != nil {
 						cmdutil.WriteCreated(f, "User", created)
 						fmt.Fprintf(f.IO.ErrOut, "%s User was created, but a post-creation step failed (likely certificate issuance). "+
-							"Run 'ics user issue-keypair <id>' to retry issuing its key pair.\n", iostreams.Yellow("!"))
+							"Run 'inconnect user issue-keypair <id>' to retry issuing its key pair.\n", iostreams.Yellow("!"))
 						return iostreams.FormatOutput(created, f.IO, f.IO.Output)
 					}
 				}
@@ -102,7 +102,7 @@ Note: --role-id is required by the server. Look up role IDs via 'ics role list'.
 	cmd.Flags().StringVar(&opts.Name, "name", "", "User name (required)")
 	cmd.Flags().StringVar(&opts.Email, "email", "", "User email (required)")
 	cmd.Flags().StringVar(&opts.OID, "org-id", "", "Organization ID")
-	cmd.Flags().StringVar(&opts.RoleID, "role-id", "", "Role ID (required; see 'ics role list')")
+	cmd.Flags().StringVar(&opts.RoleID, "role-id", "", "Role ID (required; see 'inconnect role list')")
 	cmd.Flags().Int64Var(&opts.ExpireAt, "expire-at", 0, "Expiration timestamp (epoch millis)")
 	cmd.Flags().BoolVar(&opts.Lock, "lock", false, "Create in locked state")
 	cmd.Flags().StringVar(&opts.NetworkID, "network-id", "", "Network ID to assign")

@@ -28,7 +28,7 @@ func (c *Context) IsImpersonating() bool {
 }
 
 func (c *Context) EffectiveToken() string {
-	if t := os.Getenv("ICS_TOKEN"); t != "" {
+	if t := os.Getenv("INCONNECT_TOKEN"); t != "" {
 		return t
 	}
 	return c.Token

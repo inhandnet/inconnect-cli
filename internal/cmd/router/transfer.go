@@ -6,9 +6,9 @@ import (
 
 	"github.com/tidwall/gjson"
 
-	"github.com/inhandnet/ics-cli/internal/api"
-	"github.com/inhandnet/ics-cli/internal/factory"
-	"github.com/inhandnet/ics-cli/internal/iostreams"
+	"github.com/inhandnet/inconnect-cli/internal/api"
+	"github.com/inhandnet/inconnect-cli/internal/factory"
+	"github.com/inhandnet/inconnect-cli/internal/iostreams"
 	"github.com/spf13/cobra"
 )
 
@@ -52,7 +52,7 @@ func newCmdTransfer(f *factory.Factory) *cobra.Command {
 					verify.Set("oid", opts.TargetOid)
 					if rb, gerr := client.Get("/api/invpn/router/"+args[0], verify); gerr == nil {
 						if gjson.GetBytes(rb, "result.oid").String() == opts.TargetOid {
-							fmt.Fprintf(f.IO.ErrOut, "%s Router %s is now in organization %s, but a post-transfer step failed. Verify its network assignment with 'ics router get %s'.\n",
+							fmt.Fprintf(f.IO.ErrOut, "%s Router %s is now in organization %s, but a post-transfer step failed. Verify its network assignment with 'inconnect router get %s'.\n",
 								iostreams.Yellow("!"), args[0], opts.TargetOid, args[0])
 							return iostreams.FormatOutput(rb, f.IO, f.IO.Output)
 						}

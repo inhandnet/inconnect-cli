@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/inhandnet/ics-cli/internal/api"
-	"github.com/inhandnet/ics-cli/internal/browser"
-	"github.com/inhandnet/ics-cli/internal/config"
-	"github.com/inhandnet/ics-cli/internal/factory"
-	"github.com/inhandnet/ics-cli/internal/iostreams"
+	"github.com/inhandnet/inconnect-cli/internal/api"
+	"github.com/inhandnet/inconnect-cli/internal/browser"
+	"github.com/inhandnet/inconnect-cli/internal/config"
+	"github.com/inhandnet/inconnect-cli/internal/factory"
+	"github.com/inhandnet/inconnect-cli/internal/iostreams"
 	"github.com/spf13/cobra"
 )
 
@@ -33,13 +33,13 @@ func newCmdLogin(f *factory.Factory) *cobra.Command {
 		Use:   "login",
 		Short: "Login via browser",
 		Example: `  # Login to China region (default)
-  ics auth login
+  inconnect auth login
 
   # Login to dev environment
-  ics auth login --host dev
+  inconnect auth login --host dev
 
   # Login to a custom domain
-  ics auth login --host ics.example.com`,
+  inconnect auth login --host ics.example.com`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runBrowserLogin(f, opts)
 		},
@@ -91,7 +91,7 @@ func runBrowserLogin(f *factory.Factory, opts *loginOptions) error {
 		return fmt.Errorf("fetching OAuth config from %s: %w", apiURL, err)
 	}
 
-	state := fmt.Sprintf("ics-cli-%d", time.Now().UnixNano())
+	state := fmt.Sprintf("inconnect-cli-%d", time.Now().UnixNano())
 	redirectURI := fmt.Sprintf("http://localhost:%d/callback", opts.Port)
 
 	loginURL := fmt.Sprintf("%s/user/login?redirect_uri=%s&state=%s",

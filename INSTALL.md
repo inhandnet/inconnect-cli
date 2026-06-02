@@ -1,4 +1,4 @@
-# ics CLI Installation Guide
+# inconnect CLI Installation Guide
 
 This document is designed for AI assistants (e.g. Claude Code) to read and execute.
 
@@ -10,12 +10,12 @@ Determine the OS and architecture of the current machine:
 
 | OS      | Architecture | Binary Name              |
 |---------|-------------|--------------------------|
-| Linux   | x86_64      | `ics-linux-amd64`        |
-| Linux   | arm64       | `ics-linux-arm64`        |
-| macOS   | x86_64      | `ics-darwin-amd64`       |
-| macOS   | arm64       | `ics-darwin-arm64`       |
-| Windows | x86_64      | `ics-windows-amd64.exe`  |
-| Windows | arm64       | `ics-windows-arm64.exe`  |
+| Linux   | x86_64      | `inconnect-linux-amd64`        |
+| Linux   | arm64       | `inconnect-linux-arm64`        |
+| macOS   | x86_64      | `inconnect-darwin-amd64`       |
+| macOS   | arm64       | `inconnect-darwin-arm64`       |
+| Windows | x86_64      | `inconnect-windows-amd64.exe`  |
+| Windows | arm64       | `inconnect-windows-arm64.exe`  |
 
 Run `uname -s` and `uname -m` to detect. On macOS, if `uname -m` returns `x86_64`, check `sysctl -n sysctl.proc_translated` — if it returns `1`, the shell is running under Rosetta 2 and the native architecture is `arm64`.
 
@@ -24,8 +24,8 @@ Run `uname -s` and `uname -m` to detect. On macOS, if `uname -m` returns `x86_64
 Download from **GitHub Releases**:
 
 ```
-https://github.com/inhandnet/ics-cli/releases/latest/download/{BINARY_NAME}
-https://github.com/inhandnet/ics-cli/releases/latest/download/checksums.txt
+https://github.com/inhandnet/inconnect-cli/releases/latest/download/{BINARY_NAME}
+https://github.com/inhandnet/inconnect-cli/releases/latest/download/checksums.txt
 ```
 
 ### 3. Verify Checksum
@@ -50,12 +50,12 @@ Compare the output hash with the corresponding entry in `checksums.txt`. **Do no
 
 Make the binary executable and move it to the install path:
 
-1. Try `/usr/local/bin/ics` — if permission denied, use `sudo` (ask the user first)
-2. If the user prefers no sudo, install to `~/.local/bin/ics` instead (create the directory if needed, and remind the user to add `~/.local/bin` to their PATH if it's not already there)
+1. Try `/usr/local/bin/inconnect` — if permission denied, use `sudo` (ask the user first)
+2. If the user prefers no sudo, install to `~/.local/bin/inconnect` instead (create the directory if needed, and remind the user to add `~/.local/bin` to their PATH if it's not already there)
 
 ```bash
 chmod +x <binary>
-mv <binary> /usr/local/bin/ics
+mv <binary> /usr/local/bin/inconnect
 ```
 
 #### Windows
@@ -64,15 +64,15 @@ Rename the binary and move it to a directory in PATH:
 
 ```powershell
 # Create install directory
-New-Item -ItemType Directory -Force -Path "$env:LOCALAPPDATA\ics"
+New-Item -ItemType Directory -Force -Path "$env:LOCALAPPDATA\inconnect"
 
 # Move and rename
-Move-Item <binary> "$env:LOCALAPPDATA\ics\ics.exe"
+Move-Item <binary> "$env:LOCALAPPDATA\inconnect\inconnect.exe"
 
 # Add to user PATH (persistent, takes effect in new terminal sessions)
 $currentPath = [Environment]::GetEnvironmentVariable('Path', 'User')
-if ($currentPath -notlike "*$env:LOCALAPPDATA\ics*") {
-    [Environment]::SetEnvironmentVariable('Path', "$currentPath;$env:LOCALAPPDATA\ics", 'User')
+if ($currentPath -notlike "*$env:LOCALAPPDATA\inconnect*") {
+    [Environment]::SetEnvironmentVariable('Path', "$currentPath;$env:LOCALAPPDATA\inconnect", 'User')
 }
 ```
 
@@ -84,13 +84,13 @@ $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [En
 
 ### 5. Verify
 
-Run `ics version` to confirm the installation succeeded.
+Run `inconnect version` to confirm the installation succeeded.
 
 ### 6. Login
 
 ```bash
-ics auth login            # China region (cn, default)
-ics auth login --host us  # US region
+inconnect auth login            # China region (cn, default)
+inconnect auth login --host us  # US region
 ```
 
 This opens a browser for OAuth authorization and creates a context automatically.
@@ -99,10 +99,10 @@ Available regions:
 
 | Region | Short name | Command                       |
 |--------|-----------|-------------------------------|
-| China  | `cn`      | `ics auth login` (default)    |
-| US     | `us`      | `ics auth login --host us`    |
-| EU     | `eu`      | `ics auth login --host eu`    |
+| China  | `cn`      | `inconnect auth login` (default)    |
+| US     | `us`      | `inconnect auth login --host us`    |
+| EU     | `eu`      | `inconnect auth login --host eu`    |
 
-You can also pass a custom domain: `ics auth login --host ics.example.com`.
+You can also pass a custom domain: `inconnect auth login --host ics.example.com`.
 
-Ask the user which region they need. After login, verify with `ics auth status`.
+Ask the user which region they need. After login, verify with `inconnect auth status`.

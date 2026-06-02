@@ -9,9 +9,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tidwall/gjson"
 
-	"github.com/inhandnet/ics-cli/internal/api"
-	"github.com/inhandnet/ics-cli/internal/factory"
-	"github.com/inhandnet/ics-cli/internal/iostreams"
+	"github.com/inhandnet/inconnect-cli/internal/api"
+	"github.com/inhandnet/inconnect-cli/internal/factory"
+	"github.com/inhandnet/inconnect-cli/internal/iostreams"
 )
 
 func newCmdImpersonate(f *factory.Factory) *cobra.Command {
@@ -25,13 +25,13 @@ func newCmdImpersonate(f *factory.Factory) *cobra.Command {
 		Use:   "impersonate",
 		Short: "Impersonate another user (requires ROOT privilege)",
 		Example: `  # Impersonate by org ID (auto-resolves org admin)
-  ics auth impersonate --org 5e0956c46aa6d10001e931e6
+  inconnect auth impersonate --org 5e0956c46aa6d10001e931e6
 
   # Impersonate a specific user in an org
-  ics auth impersonate --org <oid> --user <uid>
+  inconnect auth impersonate --org <oid> --user <uid>
 
   # Stop impersonation and restore admin identity
-  ics auth impersonate --stop`,
+  inconnect auth impersonate --stop`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := f.Config()
 			if err != nil {
@@ -40,7 +40,7 @@ func newCmdImpersonate(f *factory.Factory) *cobra.Command {
 			name := cfg.ActiveContextName()
 			ctx, ok := cfg.Contexts[name]
 			if !ok {
-				return fmt.Errorf("no active context; run 'ics auth login' first")
+				return fmt.Errorf("no active context; run 'inconnect auth login' first")
 			}
 
 			if stop {
@@ -66,7 +66,7 @@ func newCmdImpersonate(f *factory.Factory) *cobra.Command {
 			}
 
 			if ctx.IsImpersonating() {
-				return fmt.Errorf("already impersonating; run 'ics auth impersonate --stop' first")
+				return fmt.Errorf("already impersonating; run 'inconnect auth impersonate --stop' first")
 			}
 
 			client, err := f.APIClient()
@@ -93,7 +93,7 @@ func newCmdImpersonate(f *factory.Factory) *cobra.Command {
 				newToken, refreshErr := api.RefreshAccessToken(
 					ctx.APIURL(), ctx.ClientID, ctx.ClientSecret, ctx.RefreshToken)
 				if refreshErr != nil {
-					return fmt.Errorf("token expired and refresh failed: %w\nHint: run 'ics auth login' to re-authenticate", refreshErr)
+					return fmt.Errorf("token expired and refresh failed: %w\nHint: run 'inconnect auth login' to re-authenticate", refreshErr)
 				}
 				ctx.Token = newToken.AccessToken
 				if newToken.RefreshToken != "" {
@@ -145,7 +145,7 @@ func newCmdImpersonate(f *factory.Factory) *cobra.Command {
 			}
 
 			fmt.Fprintf(f.IO.Out, "%s Impersonating user %s in org %s\n", iostreams.Green("✓"), userID, orgID)
-			fmt.Fprintf(f.IO.Out, "Run 'ics auth impersonate --stop' to restore admin identity\n")
+			fmt.Fprintf(f.IO.Out, "Run 'inconnect auth impersonate --stop' to restore admin identity\n")
 			return nil
 		},
 	}

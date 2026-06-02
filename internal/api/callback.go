@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/inhandnet/ics-cli/internal/debug"
+	"github.com/inhandnet/inconnect-cli/internal/debug"
 )
 
 type CallbackResult struct {

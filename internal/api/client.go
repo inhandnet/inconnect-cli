@@ -7,11 +7,11 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/inhandnet/ics-cli/internal/build"
-	"github.com/inhandnet/ics-cli/internal/debug"
+	"github.com/inhandnet/inconnect-cli/internal/build"
+	"github.com/inhandnet/inconnect-cli/internal/debug"
 )
 
-var userAgent = fmt.Sprintf("ics-cli/%s (%s/%s)", build.Version, runtime.GOOS, runtime.GOARCH)
+var userAgent = fmt.Sprintf("inconnect-cli/%s (%s/%s)", build.Version, runtime.GOOS, runtime.GOARCH)
 
 type TokenTransport struct {
 	Token        string

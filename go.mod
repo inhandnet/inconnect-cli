@@ -1,4 +1,4 @@
-module github.com/inhandnet/ics-cli
+module github.com/inhandnet/inconnect-cli
 
 go 1.24.0
 

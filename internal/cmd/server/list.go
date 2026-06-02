@@ -4,8 +4,8 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/inhandnet/ics-cli/internal/factory"
-	"github.com/inhandnet/ics-cli/internal/iostreams"
+	"github.com/inhandnet/inconnect-cli/internal/factory"
+	"github.com/inhandnet/inconnect-cli/internal/iostreams"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,7 @@ func newCmdList(f *factory.Factory) *cobra.Command {
 			q := url.Values{}
 			if oid, _ := cmd.Flags().GetString("oid"); oid != "" {
 				q.Set("oid", oid)
-			} else if oid := os.Getenv("ICS_OID"); oid != "" {
+			} else if oid := os.Getenv("INCONNECT_OID"); oid != "" {
 				q.Set("oid", oid)
 			}
 
