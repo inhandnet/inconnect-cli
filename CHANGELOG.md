@@ -5,6 +5,15 @@ All notable changes to the InConnect CLI are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+- `server logs` — `--tail` and `--since` are now mutually exclusive query modes,
+  matching the updated API semantics: `--tail` returns the last N lines, `--since`
+  returns logs from a time offset (volume capped server-side). `--tail` is only
+  sent when explicitly set; passing both flags now fails locally.
+
 ## v0.2.0 - 2026-06-02
 
 ### Added

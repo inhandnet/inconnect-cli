@@ -24,6 +24,10 @@ func newCmdLogs(f *factory.Factory) *cobra.Command {
 		Short: "Stream the org's OpenVPN server Pod logs (current Pod lifecycle only)",
 		Long: `Read the OpenVPN server Pod logs in real time (not persisted).
 
+--tail and --since are two mutually exclusive query modes: --tail returns the
+last N lines, --since returns logs from a time offset (server caps the volume).
+Without flags the server defaults to the last 200 lines.
+
 Only logs from the current Pod lifecycle are available; a Pod restart loses
 previous output. Logs may contain client real IP, so this requires admin.`,
 		Args: cobra.ExactArgs(1),
@@ -40,7 +44,9 @@ previous output. Logs may contain client real IP, so this requires admin.`,
 
 			q := url.Values{}
 			q.Set("oid", oid)
-			q.Set("tail", strconv.Itoa(opts.Tail))
+			if cmd.Flags().Changed("tail") {
+				q.Set("tail", strconv.Itoa(opts.Tail))
+			}
 			if opts.Since != "" {
 				q.Set("since", opts.Since)
 			}
@@ -61,9 +67,10 @@ previous output. Logs may contain client real IP, so this requires admin.`,
 		},
 	}
 
-	cmd.Flags().IntVar(&opts.Tail, "tail", 200, "Return the last N lines (max 2000)")
-	cmd.Flags().StringVar(&opts.Since, "since", "", "Only logs within this window (e.g. 10m, 1h)")
+	cmd.Flags().IntVar(&opts.Tail, "tail", 200, "Return the last N lines (max 2000); mutually exclusive with --since")
+	cmd.Flags().StringVar(&opts.Since, "since", "", "Logs since a time offset (e.g. 10m, 1h); mutually exclusive with --tail")
 	cmd.Flags().StringVar(&opts.Format, "format", "text", "Output format: text (raw) or json (line-wrapped)")
+	cmd.MarkFlagsMutuallyExclusive("tail", "since")
 
 	return cmd
 }
