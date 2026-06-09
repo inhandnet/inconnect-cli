@@ -5,6 +5,29 @@ All notable changes to the InConnect CLI are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.3.0 - 2026-06-09
+
+### Added
+
+- `router ssh <id> --server <ngrok:port>` — open a TCP ngrok tunnel to a
+  device's SSH port and print a ready-to-use `ssh <uuid>+<user>@host` connect
+  string, for logging into a device to pull logs / run diagnostics. Requires
+  the ngrok server's embedded SSH reverse proxy.
+- `router tunnel-close <uuid>` — explicitly close an ngrok tunnel opened by
+  `router web` / `router ssh`, instead of waiting for the device-side idle
+  timeout to reclaim it.
+
+### Changed
+
+- `router web` is now HTTP-only (the `--proto` flag is removed) and prints the
+  tunnel id so the tunnel can be closed with `router tunnel-close`.
+
+### Deprecated
+
+- `router exec` is hidden and deprecated: the device-side mqttagent has no
+  handler for it, so every command returns `handle <cmd> failed`. Use
+  `router ssh` to run commands on a device.
+
 ## v0.2.1 - 2026-06-04
 
 ### Changed
