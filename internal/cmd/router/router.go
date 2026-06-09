@@ -32,6 +32,8 @@ func NewCmdRouter(f *factory.Factory) *cobra.Command {
 		newCmdNatConf(f),
 		newCmdLocations(f),
 		newCmdWeb(f),
+		newCmdSSH(f),
+		newCmdTunnelClose(f),
 		newCmdExec(f),
 		newCmdRunningConfig(f),
 		newCmdTrafficDay(f),

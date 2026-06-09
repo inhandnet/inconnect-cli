@@ -16,13 +16,20 @@ func newCmdExec(f *factory.Factory) *cobra.Command {
 	var timeoutSec int
 
 	cmd := &cobra.Command{
-		Use:   "exec <id> <command>...",
-		Short: "Run a shell command on a router remotely",
+		Use:    "exec <id> <command>...",
+		Short:  "Run a shell command on a router remotely (NOT supported by devices)",
+		Hidden: true,
+		// The platform accepts this task (type=2) and returns 200, but device-side
+		// mqttagent has no handler for it: every command comes back as
+		// data.response="handle <cmd> failed" with state=-1. To run commands on a
+		// device for diagnostics, use "inconnect router ssh" instead.
+		Deprecated: "device-side mqttagent does not implement this; use `inconnect router ssh` to run commands on a device.",
 		Long: `Run a shell command on a router remotely and print its output.
 
-Examples:
-  inconnect router exec <id> show log
-  inconnect router exec <id> "ifconfig eth0"`,
+NOTE: This command is NOT supported by devices. The platform accepts the task
+and returns 200, but the device's mqttagent has no handler for it, so every
+command comes back as "handle <cmd> failed" (state=-1). To run commands on a
+device for diagnostics, open an SSH tunnel with "inconnect router ssh" instead.`,
 		Args: cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := f.APIClient()

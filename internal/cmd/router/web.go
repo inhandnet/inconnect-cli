@@ -14,7 +14,6 @@ import (
 func newCmdWeb(f *factory.Factory) *cobra.Command {
 	var (
 		noBrowser  bool
-		proto      string
 		port       int
 		server     string
 		timeoutSec int
@@ -22,7 +21,7 @@ func newCmdWeb(f *factory.Factory) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "web <id>",
-		Short: "Open device web management via ngrok tunnel",
+		Short: "Open device web management UI via ngrok tunnel",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := f.APIClient()
@@ -37,8 +36,6 @@ func newCmdWeb(f *factory.Factory) *cobra.Command {
 
 			fmt.Fprintf(f.IO.ErrOut, "Establishing ngrok tunnel to device %s...\n", args[0])
 
-			// Same task as the web UI: type=23 (ngrok connect) via /api2/tasks/run.
-			// The tunnel URL is returned in result.data.response.
 			body := map[string]any{
 				"name":     "ngrok connect",
 				"type":     23,
@@ -47,7 +44,7 @@ func newCmdWeb(f *factory.Factory) *cobra.Command {
 				"timeout":  timeoutSec * 1000,
 				"data": map[string]any{
 					"server": server,
-					"proto":  proto,
+					"proto":  "http",
 					"port":   port,
 				},
 			}
@@ -71,6 +68,15 @@ func newCmdWeb(f *factory.Factory) *cobra.Command {
 
 			fmt.Fprintln(f.IO.Out, tunnelURL)
 
+			// The ngrok server encodes stateless web tunnels with the tunnel
+			// uuid as the leading DNS label (https://<uuid>.<domain>), so the
+			// uuid can be recovered here and used to close the tunnel.
+			if u, perr := url.Parse(tunnelURL); perr == nil {
+				if leaf, _ := splitFirstLabel(u.Hostname()); isHexUUID(leaf) {
+					fmt.Fprintf(f.IO.Out, "Tunnel ID: %s   (close with: inconnect router tunnel-close %s)\n", leaf, leaf)
+				}
+			}
+
 			if !noBrowser {
 				browser.Open(tunnelURL)
 			}
@@ -80,8 +86,7 @@ func newCmdWeb(f *factory.Factory) *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&noBrowser, "no-browser", false, "Print URL only, don't open browser")
-	cmd.Flags().StringVar(&proto, "proto", "http", "Tunnel protocol")
-	cmd.Flags().IntVar(&port, "port", 80, "Device-side port to expose")
+	cmd.Flags().IntVar(&port, "port", 80, "Device-side web port to expose")
 	cmd.Flags().StringVar(&server, "server", "ngrok.j3r0lin.com:4443", "Ngrok server address")
 	cmd.Flags().IntVar(&timeoutSec, "timeout", 60, "Task timeout in seconds")
 
