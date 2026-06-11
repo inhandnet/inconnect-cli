@@ -33,6 +33,11 @@ will fail.`,
 				return err
 			}
 
+			server, err = resolveNgrokServer(f, server)
+			if err != nil {
+				return err
+			}
+
 			q := url.Values{}
 			if oid, _ := cmd.Flags().GetString("oid"); oid != "" {
 				q.Set("oid", oid)
@@ -101,11 +106,34 @@ will fail.`,
 		},
 	}
 
-	cmd.Flags().StringVar(&server, "server", "ngrok.j3r0lin.com:4443", "Ngrok server address")
+	cmd.Flags().StringVar(&server, "server", "", "Ngrok server address (default: auto-detected from the active context's host)")
 	cmd.Flags().IntVar(&timeoutSec, "timeout", 60, "Task timeout in seconds")
 	cmd.Flags().IntVar(&port, "port", 22, "Device-side SSH port")
 
 	return cmd
+}
+
+// resolveNgrokServer returns the ngrok server to use. An explicit --server
+// value wins; otherwise it is auto-detected from the active context's host so
+// the user doesn't have to know per-environment ngrok endpoints.
+func resolveNgrokServer(f *factory.Factory, flag string) (string, error) {
+	if flag != "" {
+		return flag, nil
+	}
+	cfg, err := f.Config()
+	if err != nil {
+		return "", err
+	}
+	ctx, err := cfg.ActiveContext()
+	if err != nil {
+		return "", err
+	}
+	server := ctx.NgrokServer()
+	if server == "" {
+		return "", fmt.Errorf("could not determine ngrok server from current context; pass --server explicitly")
+	}
+	fmt.Fprintf(f.IO.ErrOut, "Using ngrok server %s (auto-detected from context host)\n", server)
+	return server, nil
 }
 
 // splitFirstLabel cuts host into its leading DNS label and the rest.

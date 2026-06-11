@@ -29,6 +29,11 @@ func newCmdWeb(f *factory.Factory) *cobra.Command {
 				return err
 			}
 
+			server, err = resolveNgrokServer(f, server)
+			if err != nil {
+				return err
+			}
+
 			q := url.Values{}
 			if oid, _ := cmd.Flags().GetString("oid"); oid != "" {
 				q.Set("oid", oid)
@@ -87,7 +92,7 @@ func newCmdWeb(f *factory.Factory) *cobra.Command {
 
 	cmd.Flags().BoolVar(&noBrowser, "no-browser", false, "Print URL only, don't open browser")
 	cmd.Flags().IntVar(&port, "port", 80, "Device-side web port to expose")
-	cmd.Flags().StringVar(&server, "server", "ngrok.j3r0lin.com:4443", "Ngrok server address")
+	cmd.Flags().StringVar(&server, "server", "", "Ngrok server address (default: auto-detected from the active context's host)")
 	cmd.Flags().IntVar(&timeoutSec, "timeout", 60, "Task timeout in seconds")
 
 	return cmd
