@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
+	"strconv"
 	"strings"
-	"text/tabwriter"
+	"time"
 
 	"github.com/itchyny/gojq"
 	"github.com/tidwall/gjson"
@@ -14,19 +16,19 @@ import (
 )
 
 func FormatOutput(body []byte, ios *IOStreams, output string) error {
-	data := unwrapResult(body)
-
 	if ios.JQ != "" {
-		return applyJQ(data, ios.JQ, ios.Out, ios.IsTTY)
+		return applyJQ(unwrapResult(body), ios.JQ, ios.Out, ios.IsTTY)
 	}
 
 	switch output {
 	case "table":
-		return formatTable(data, ios.Out)
+		// table renders from the original body so it can read pagination
+		// metadata (total/page) from the envelope.
+		return formatTable(body, ios)
 	case "yaml":
-		return formatYAML(data, ios.Out)
+		return formatYAML(unwrapResult(body), ios.Out)
 	default:
-		return formatJSON(data, ios.Out, ios.IsTTY)
+		return formatJSON(unwrapResult(body), ios.Out, ios.IsTTY)
 	}
 }
 
@@ -46,66 +48,250 @@ func formatJSON(data []byte, w io.Writer, isTTY bool) error {
 	return err
 }
 
-func formatTable(data []byte, w io.Writer) error {
+// formatTable renders JSON as a table. It unwraps a "result" envelope when
+// present, then renders an array of objects as headered rows, or a single
+// object as KEY/VALUE pairs. ios.Columns filters and orders the columns.
+func formatTable(data []byte, ios *IOStreams) error {
 	parsed := gjson.ParseBytes(data)
 
-	if parsed.IsArray() {
-		return formatArrayTable(parsed, w)
+	items := parsed.Get("result")
+	if !items.Exists() {
+		items = parsed
 	}
-	return formatObjectTable(parsed, w)
-}
 
-func formatArrayTable(arr gjson.Result, w io.Writer) error {
-	items := arr.Array()
-	if len(items) == 0 {
-		fmt.Fprintln(w, "(no results)")
+	tp := NewTablePrinter(ios.Out, ios.IsTTY)
+
+	switch {
+	case items.IsArray():
+		arr := items.Array()
+		if ios.IsTTY {
+			if header := paginationHeader(&parsed, len(arr)); header != "" {
+				fmt.Fprintln(ios.Out, Gray(header))
+			}
+		}
+		if len(arr) == 0 {
+			fmt.Fprintln(ios.Out, "(no results)")
+			return nil
+		}
+		renderArray(tp, arr, ios)
+	case items.IsObject():
+		renderObject(tp, &items, ios)
+	default:
+		fmt.Fprintln(ios.Out, formatResult(&items))
 		return nil
 	}
+	return tp.Render()
+}
 
-	var keys []string
-	items[0].ForEach(func(key, _ gjson.Result) bool {
-		keys = append(keys, key.String())
-		return true
-	})
-
-	tw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
-
-	header := make([]string, len(keys))
-	for i, k := range keys {
-		header[i] = strings.ToUpper(k)
+// paginationHeader builds a "Showing X of Y results (Page M of N)" line from
+// the envelope metadata. Returns "" when no pagination info is available.
+func paginationHeader(raw *gjson.Result, count int) string {
+	if !raw.IsObject() || count == 0 {
+		return ""
 	}
-	fmt.Fprintln(tw, strings.Join(header, "\t"))
+	total := raw.Get("total")
+	totalPages := raw.Get("totalPages")
+	page := raw.Get("page")
+
+	var parts []string
+	if total.Exists() && total.Int() > 0 {
+		parts = append(parts, fmt.Sprintf("Showing %d of %d results", count, total.Int()))
+	} else {
+		parts = append(parts, fmt.Sprintf("Showing %d results", count))
+	}
+	if totalPages.Exists() && totalPages.Int() > 0 {
+		parts = append(parts, fmt.Sprintf("(Page %d of %d)", page.Int()+1, totalPages.Int()))
+	} else if page.Exists() {
+		parts = append(parts, fmt.Sprintf("(Page %d)", page.Int()+1))
+	}
+	return strings.Join(parts, " ")
+}
+
+// resolveColumns computes the effective column list. Entries prefixed with "!"
+// are exclusions. Explicit includes (if any) define order; otherwise all keys
+// are shown. Exclusions are removed from whichever set is used.
+func resolveColumns(columns, allKeys []string) []string {
+	if len(columns) == 0 {
+		return allKeys
+	}
+	var includes []string
+	excluded := map[string]bool{}
+	for _, c := range columns {
+		if strings.HasPrefix(c, "!") {
+			excluded[strings.TrimPrefix(c, "!")] = true
+		} else {
+			includes = append(includes, c)
+		}
+	}
+
+	base := includes
+	if len(base) == 0 {
+		base = allKeys
+	}
+	result := make([]string, 0, len(base))
+	for _, c := range base {
+		if !excluded[c] {
+			result = append(result, c)
+		}
+	}
+	return result
+}
+
+// renderArray renders an array of objects as a table with a header row.
+func renderArray(tp *TablePrinter, items []gjson.Result, ios *IOStreams) {
+	first := items[0]
+	if !first.IsObject() {
+		for i := range items {
+			tp.AddRow(formatResult(&items[i]))
+		}
+		return
+	}
+
+	cols := resolveColumns(ios.Columns, flattenKeys(&first))
+
+	header := make([]string, len(cols))
+	for i, col := range cols {
+		h := strings.ToUpper(col)
+		if ios.IsTTY {
+			h = Bold(h)
+		}
+		header[i] = h
+	}
+	tp.AddRow(header...)
 
 	for _, item := range items {
-		vals := make([]string, len(keys))
-		for i, k := range keys {
-			vals[i] = cell(item.Get(k).String())
+		if !item.IsObject() {
+			continue
 		}
-		fmt.Fprintln(tw, strings.Join(vals, "\t"))
+		row := make([]string, len(cols))
+		for j, col := range cols {
+			v := item.Get(col)
+			row[j] = cell(formatResult(&v))
+		}
+		tp.AddRow(row...)
 	}
-	return tw.Flush()
 }
 
-func formatObjectTable(obj gjson.Result, w io.Writer) error {
-	tw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
-	obj.ForEach(func(key, value gjson.Result) bool {
-		fmt.Fprintf(tw, "%s\t%s\n", key.String(), cell(value.String()))
+// renderObject renders a single object as KEY / VALUE pairs.
+func renderObject(tp *TablePrinter, obj *gjson.Result, ios *IOStreams) {
+	cols := resolveColumns(ios.Columns, flattenKeys(obj))
+	for _, key := range cols {
+		val := obj.Get(key)
+		if !val.Exists() {
+			continue
+		}
+		k := key
+		if ios.IsTTY {
+			k = Bold(key)
+		}
+		tp.AddRow(k, formatResult(&val))
+	}
+}
+
+// formatResult converts a gjson.Result to a display string, localizing
+// ISO-8601 timestamps and rendering nested JSON inline.
+func formatResult(r *gjson.Result) string {
+	switch r.Type {
+	case gjson.Null:
+		return ""
+	case gjson.String:
+		if s := formatLocalTime(r.Str); s != "" {
+			return s
+		}
+		return r.Str
+	case gjson.True:
+		return "true"
+	case gjson.False:
+		return "false"
+	case gjson.Number:
+		if r.Num == float64(int64(r.Num)) {
+			return fmt.Sprintf("%d", int64(r.Num))
+		}
+		return formatFloat(r.Num)
+	case gjson.JSON:
+		return r.Raw
+	default:
+		return r.String()
+	}
+}
+
+// cell collapses embedded whitespace so a value can't break table alignment.
+func cell(s string) string {
+	return strings.NewReplacer("\t", " ", "\n", " ", "\r", " ").Replace(s)
+}
+
+// escapeGjsonKey escapes dots and wildcards so gjson treats a key segment as a
+// literal key rather than a nested path.
+func escapeGjsonKey(s string) string {
+	if !strings.ContainsAny(s, ".?*\\") {
+		return s
+	}
+	var b strings.Builder
+	for _, c := range s {
+		switch c {
+		case '.', '?', '*', '\\':
+			b.WriteByte('\\')
+		}
+		b.WriteRune(c)
+	}
+	return b.String()
+}
+
+// flattenKeys collects leaf-level gjson-escaped dot-paths from an object,
+// expanding nested objects (arrays and scalars are leaves), sorted.
+func flattenKeys(r *gjson.Result) []string {
+	keys := flattenKeysWithPrefix(r, "")
+	sort.Strings(keys)
+	return keys
+}
+
+func flattenKeysWithPrefix(r *gjson.Result, prefix string) []string {
+	var keys []string
+	r.ForEach(func(key, value gjson.Result) bool {
+		seg := escapeGjsonKey(key.Str)
+		path := seg
+		if prefix != "" {
+			path = prefix + "." + seg
+		}
+		if value.IsObject() {
+			keys = append(keys, flattenKeysWithPrefix(&value, path)...)
+		} else {
+			keys = append(keys, path)
+		}
 		return true
 	})
-	return tw.Flush()
+	return keys
 }
 
-const maxCellWidth = 48
+var timestampLayouts = []string{
+	time.RFC3339Nano,
+	time.RFC3339,
+	"2006-01-02T15:04:05",
+}
 
-// cell flattens a value for single-row table display: embedded tabs/newlines
-// would corrupt column alignment, so collapse them to spaces, and overly long
-// values (nested JSON, certs) are truncated so one wide column can't blow out
-// the whole table. Use -o json/yaml or --jq for full values.
-func cell(s string) string {
-	s = strings.NewReplacer("\t", " ", "\n", " ", "\r", " ").Replace(s)
-	if r := []rune(s); len(r) > maxCellWidth {
-		return string(r[:maxCellWidth-1]) + "…"
+// formatLocalTime parses s as an ISO-8601 timestamp and returns it in local
+// time, or "" if s is not a recognized timestamp.
+func formatLocalTime(s string) string {
+	if len(s) < 19 || s[4] != '-' || s[7] != '-' || s[10] != 'T' {
+		return ""
 	}
+	for _, layout := range timestampLayouts {
+		if t, err := time.Parse(layout, s); err == nil {
+			return t.Local().Format("2006-01-02 15:04:05")
+		}
+	}
+	return ""
+}
+
+// formatFloat formats a float64 for table display with up to 3 decimals,
+// trimming trailing zeros, falling back to %g for tiny values.
+func formatFloat(f float64) string {
+	s := strconv.FormatFloat(f, 'f', 3, 64)
+	if f != 0 && strings.TrimRight(strings.TrimRight(s, "0"), ".") == "0" {
+		return strconv.FormatFloat(f, 'g', -1, 64)
+	}
+	s = strings.TrimRight(s, "0")
+	s = strings.TrimRight(s, ".")
 	return s
 }
 
@@ -150,9 +336,17 @@ func applyJQ(data []byte, expr string, w io.Writer, isTTY bool) error {
 	return nil
 }
 
+// unwrapResult strips the envelope when the JSON object has "result" as its
+// only key, or "result" plus a single pagination key (total/count). Richer
+// envelopes are left intact so json/yaml output retains pagination metadata.
 func unwrapResult(body []byte) []byte {
 	parsed := gjson.ParseBytes(body)
 	if !parsed.IsObject() {
+		return body
+	}
+
+	result := parsed.Get("result")
+	if !result.Exists() {
 		return body
 	}
 
@@ -162,25 +356,15 @@ func unwrapResult(body []byte) []byte {
 		return true
 	})
 
-	if len(keys) == 1 && keys[0] == "result" {
-		return []byte(parsed.Get("result").Raw)
+	if len(keys) == 1 {
+		return []byte(result.Raw)
 	}
-
 	if len(keys) == 2 {
-		hasResult := false
-		hasTotal := false
 		for _, k := range keys {
-			if k == "result" {
-				hasResult = true
-			}
 			if k == "total" || k == "count" {
-				hasTotal = true
+				return []byte(result.Raw)
 			}
-		}
-		if hasResult && hasTotal {
-			return []byte(parsed.Get("result").Raw)
 		}
 	}
-
 	return body
 }

@@ -5,7 +5,9 @@ go 1.24.0
 require (
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/itchyny/gojq v0.12.19
+	github.com/jedib0t/go-pretty/v6 v6.8.1
 	github.com/mattn/go-isatty v0.0.20
+	github.com/mattn/go-runewidth v0.0.19
 	github.com/spf13/cobra v1.8.1
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/pretty v1.2.1
@@ -13,6 +15,8 @@ require (
 )
 
 require (
+	github.com/clipperhouse/stringish v0.1.1 // indirect
+	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/itchyny/timefmt-go v0.1.8 // indirect
@@ -21,4 +25,5 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 )

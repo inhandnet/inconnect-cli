@@ -42,6 +42,10 @@ func NewCmdRoot(f *factory.Factory) *cobra.Command {
 			}
 			f.IO.Output = output
 
+			if cols, _ := cmd.Flags().GetStringSlice("columns"); len(cols) > 0 {
+				f.IO.Columns = cols
+			}
+
 			if ctx, _ := cmd.Flags().GetString("context"); ctx != "" {
 				os.Setenv("INCONNECT_CONTEXT", ctx)
 			}
@@ -71,6 +75,7 @@ func NewCmdRoot(f *factory.Factory) *cobra.Command {
 	}
 
 	cmd.PersistentFlags().StringP("output", "o", "", "Output format: json, table, yaml (default: table for TTY, json otherwise)")
+	cmd.PersistentFlags().StringSliceP("columns", "c", nil, "Table columns to show (comma-separated dot-paths; prefix ! to exclude)")
 	cmd.PersistentFlags().String("jq", "", "Filter JSON output using a jq expression")
 	cmd.PersistentFlags().String("oid", "", "Organization ID")
 	cmd.PersistentFlags().String("context", "", "Config context to use")

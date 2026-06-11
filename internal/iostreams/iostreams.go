@@ -8,12 +8,13 @@ import (
 )
 
 type IOStreams struct {
-	Out    io.Writer
-	ErrOut io.Writer
-	In     io.Reader
-	IsTTY  bool
-	Output string
-	JQ     string
+	Out     io.Writer
+	ErrOut  io.Writer
+	In      io.Reader
+	IsTTY   bool
+	Output  string
+	JQ      string
+	Columns []string
 }
 
 func System() *IOStreams {
