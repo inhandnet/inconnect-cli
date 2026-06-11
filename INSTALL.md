@@ -106,3 +106,14 @@ Available regions:
 You can also pass a custom domain: `inconnect auth login --host ics.example.com`.
 
 Ask the user which region they need. After login, verify with `inconnect auth status`.
+
+## Upgrading
+
+Once installed, the CLI can update itself in place — no need to repeat the steps above:
+
+```bash
+inconnect update          # download and install the latest release
+inconnect update --check  # only check whether a newer version exists
+```
+
+It pulls from GitHub Releases and falls back to a China mirror when GitHub is unreachable. On macOS/Linux, if the install path needs elevated permissions, run `sudo inconnect update`.

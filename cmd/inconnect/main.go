@@ -17,7 +17,7 @@ import (
 	"github.com/inhandnet/inconnect-cli/internal/cmd/drc"
 	"github.com/inhandnet/inconnect-cli/internal/cmd/endpoint"
 	"github.com/inhandnet/inconnect-cli/internal/cmd/firmware"
-"github.com/inhandnet/inconnect-cli/internal/cmd/mail"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/mail"
 	"github.com/inhandnet/inconnect-cli/internal/cmd/network"
 	"github.com/inhandnet/inconnect-cli/internal/cmd/org"
 	"github.com/inhandnet/inconnect-cli/internal/cmd/registerlog"
@@ -26,6 +26,7 @@ import (
 	"github.com/inhandnet/inconnect-cli/internal/cmd/server"
 	"github.com/inhandnet/inconnect-cli/internal/cmd/system"
 	"github.com/inhandnet/inconnect-cli/internal/cmd/task"
+	"github.com/inhandnet/inconnect-cli/internal/cmd/update"
 	"github.com/inhandnet/inconnect-cli/internal/cmd/user"
 	"github.com/inhandnet/inconnect-cli/internal/cmd/vpnevent"
 	"github.com/inhandnet/inconnect-cli/internal/factory"
@@ -48,7 +49,7 @@ func main() {
 		drc.NewCmdDRC(f),
 		user.NewCmdUser(f),
 		role.NewCmdRole(f),
-datausage.NewCmdDataUsage(f),
+		datausage.NewCmdDataUsage(f),
 		org.NewCmdOrg(f),
 		billing.NewCmdBilling(f),
 		banner.NewCmdBanner(f),
@@ -59,6 +60,7 @@ datausage.NewCmdDataUsage(f),
 		vpnevent.NewCmdVpnEvent(f),
 		system.NewCmdSystem(f),
 		cmdapi.NewCmdAPI(f),
+		update.NewCmdUpdate(f),
 	)
 
 	if _, err := rootCmd.ExecuteC(); err != nil {
