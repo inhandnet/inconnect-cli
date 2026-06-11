@@ -58,6 +58,40 @@ jobs:
             bin/inconnect-*
             bin/checksums.txt
 
+      # Mirror release assets to the China S3 bucket so 'inconnect update' can
+      # fall back to it when GitHub is unreachable. Reuses the shared
+      # incloud-cli-releases bucket under the inconnect-cli prefix; the
+      # update command's HttpSource resolves {BaseURL}/inhandnet/inconnect-cli/.
+      # Skipped (continue-on-error) when AWS_CN_* secrets aren't configured.
+      - name: Sync to S3 mirror (China)
+        continue-on-error: true
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_CN_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_CN_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: cn-north-1
+        run: |
+          TAG=${{ github.ref_name }}
+          BUCKET=incloud-cli-releases
+          PREFIX=inhandnet/inconnect-cli
+
+          # Upload binaries and checksums
+          aws s3 cp bin/ "s3://${BUCKET}/${PREFIX}/${TAG}/" \
+            --recursive --exclude "*" --include "inconnect-*" --include "checksums.txt"
+
+          # Download existing manifest or start fresh
+          aws s3 cp "s3://${BUCKET}/${PREFIX}/manifest.yaml" manifest.yaml 2>/dev/null || true
+
+          # Update manifest with new release
+          pip install pyyaml -q
+          python3 scripts/update-s3-manifest.py \
+            --tag "${TAG}" \
+            --bin-dir bin \
+            --notes-file /tmp/release_notes.md \
+            --manifest manifest.yaml
+
+          # Upload updated manifest
+          aws s3 cp manifest.yaml "s3://${BUCKET}/${PREFIX}/manifest.yaml"
+
   # Keep the inconnect-skills plugin's command references in sync with each CLI
   # release: regenerate them from this tag's command tree and push to the
   # skills repo. Requires a SKILLS_SYNC_TOKEN secret with write access to
