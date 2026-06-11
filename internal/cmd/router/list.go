@@ -24,6 +24,19 @@ func newCmdList(f *factory.Factory) *cobra.Command {
 		Use:     "list",
 		Aliases: []string{"ls"},
 		Short:   "List VPN routers",
+		Long: `List VPN routers.
+
+Each router reports two INDEPENDENT status fields — don't confuse them:
+
+  online    (1/0)         Device-management channel (MQTT): whether the
+                          platform can reach the device. Config push, remote
+                          control, ngrok and reboot all depend on this.
+  connected (true/false)  VPN tunnel (OpenVPN): whether the device has an
+                          active VPN tunnel to its server and can carry VPN
+                          traffic.
+
+A device is commonly online=1 while connected=false (manageable, but no VPN
+tunnel — e.g. its server isn't running). Filter with --online / --connected.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := f.APIClient()
 			if err != nil {
