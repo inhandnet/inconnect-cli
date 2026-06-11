@@ -5,6 +5,29 @@ All notable changes to the InConnect CLI are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.4.0 - 2026-06-11
+
+### Added
+
+- `inconnect update` — self-install the latest GitHub release in place, with
+  `--check` (report only), `--version <ver>` (pin a version) and `-y` (skip the
+  confirmation prompt). Downloads fall back to a China S3 mirror when GitHub is
+  unreachable.
+- `--columns` / `-c` — choose which columns table output shows (comma-separated
+  dot-paths; prefix `!` to exclude a column).
+
+### Changed
+
+- Table output is now rendered with go-pretty, fixing column alignment for CJK
+  and other wide-character values.
+- `router ssh` / `router web` auto-detect the ngrok server from the active
+  context's host (cn/us/eu/dev/beta); `--server` now only overrides it.
+
+### Documentation
+
+- `router list` / `router get` help now explains the two independent status
+  fields: `online` (MQTT management channel) vs `connected` (VPN tunnel).
+
 ## v0.3.0 - 2026-06-09
 
 ### Added
